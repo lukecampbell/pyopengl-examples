@@ -25,6 +25,7 @@ class HelloGL:
         glutInitWindowSize(250, 250)
         glutInitWindowPosition(100, 100)
         glutCreateWindow("sample 1")
+        self.compileProgram()
         self.drawScene()
         glutDisplayFunc(self.display)
         glutKeyboardFunc(self.keyPressed)
@@ -39,14 +40,14 @@ class HelloGL:
         glBufferData(GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL_STATIC_DRAW)
         return array_buffer
 
-    def drawScene(self):
-        glClearColor (0.0, 0.0, 0.0, 0.0)
-
+    def compileProgram(self):
         vertex_shader = shaders.compileShader(vs_src, GL_VERTEX_SHADER)
         fragment_shader = shaders.compileShader(fs_src, GL_FRAGMENT_SHADER)
-
         self.shader = shaders.compileProgram(vertex_shader, fragment_shader)
         shaders.glUseProgram(self.shader)
+
+    def drawScene(self):
+        glClearColor (0.0, 0.0, 0.0, 0.0)
 
         self.position_location = glGetAttribLocation(self.shader, 'vPosition')
 

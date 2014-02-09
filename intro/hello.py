@@ -11,8 +11,9 @@ import numpy as np
 vs_src = '''
 attribute vec4 aPosition;
 uniform mat4 uPMatrix;
+uniform mat4 uMVMatrix;
 void main() {
-    gl_Position = uPMatrix * aPosition;
+    gl_Position = uPMatrix * uMVMatrix * aPosition;
 }'''
 
 fs_src = '''
@@ -48,11 +49,26 @@ class HelloGL:
         self.shader = shaders.compileProgram(vertex_shader, fragment_shader)
         shaders.glUseProgram(self.shader)
 
+    def setUnifroms(self):
+        self.uniform_perspective = glGetUniformLocation(self.shader, "uPMatrix")
+        perspective_matrix = perspective(45., 1., 0.1, 100.)
+        glUniformMatrix4fv(self.uniform_perspective, 1, GL_FALSE, perspective_matrix)
+
+        self.uniform_mv = glGetUniformLocation(self.shader, "uMVMatrix")
+        mv_matrix = np.identity(4, dtype=np.float32)
+        glUniformMatrix4fv(self.uniform_mv, 1, GL_FALSE, mv_matrix)
+
+    def drawVBO(self, vertices, attribute_location):
+        vertex_buffer = self.makeVertexBuffer(vertices)
+        # bind vertex buffer to attribute_position
+        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer)
+        glEnableVertexAttribArray(attribute_location)
+        glVertexAttribPointer(attribute_location, 3, GL_FLOAT, GL_FALSE, 0, None)
+
     def drawScene(self):
         glClearColor(0.0, 0.0, 0.0, 0.0)
 
         self.attribute_position = glGetAttribLocation(self.shader, 'aPosition')
-        self.uniform_perspective = glGetUniformLocation(self.shader, "uPMatrix")
 
         vertices = np.array([
                 [-0.90, -0.90, -2.],
@@ -62,15 +78,9 @@ class HelloGL:
                 [ 0.90,  0.90, -2.],
                 [-0.85,  0.90, -2.],
                 ],dtype=np.float32)
-
-        vertex_buffer = self.makeVertexBuffer(vertices)
-        # bind vertex buffer to attribute_position
-        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer)
-        glEnableVertexAttribArray(self.attribute_position)
-        glVertexAttribPointer( self.attribute_position, 3, GL_FLOAT, GL_FALSE, 0, None)
-
-        perspective_matrix = perspective(45., 1., 0.1, 100.)
-        glUniformMatrix4fv(self.uniform_perspective, 1, GL_FALSE, perspective_matrix)
+        
+        self.drawVBO(vertices, self.attribute_position)
+        self.setUnifroms()
 
 
     def display(self):

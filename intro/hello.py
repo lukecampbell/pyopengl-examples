@@ -5,12 +5,14 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GL import shaders
 from OpenGL.arrays import vbo
+from glmath import perspective
 import numpy as np
 
 vs_src = '''
-attribute vec4 vPosition;
+attribute vec4 aPosition;
+uniform mat4 uPMatrix;
 void main() {
-    gl_Position = vPosition;
+    gl_Position = uPMatrix * aPosition;
 }'''
 
 fs_src = '''
@@ -49,22 +51,27 @@ class HelloGL:
     def drawScene(self):
         glClearColor(0.0, 0.0, 0.0, 0.0)
 
-        self.position_location = glGetAttribLocation(self.shader, 'vPosition')
+        self.attribute_position = glGetAttribLocation(self.shader, 'aPosition')
+        self.uniform_perspective = glGetUniformLocation(self.shader, "uPMatrix")
 
         vertices = np.array([
-                [-0.90, -0.90],
-                [ 0.85, -0.90],
-                [-0.90,  0.85],
-                [ 0.90, -0.85],
-                [ 0.90,  0.90],
-                [-0.85,  0.90],
+                [-0.90, -0.90, -2.],
+                [ 0.85, -0.90, -2.],
+                [-0.90,  0.85, -2.],
+                [ 0.90, -0.85, -2.],
+                [ 0.90,  0.90, -2.],
+                [-0.85,  0.90, -2.],
                 ],dtype=np.float32)
 
         vertex_buffer = self.makeVertexBuffer(vertices)
-        # bind vertex buffer to position_location
+        # bind vertex buffer to attribute_position
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer)
-        glEnableVertexAttribArray(self.position_location)
-        glVertexAttribPointer( self.position_location, 2, GL_FLOAT, GL_FALSE, 0, None)
+        glEnableVertexAttribArray(self.attribute_position)
+        glVertexAttribPointer( self.attribute_position, 3, GL_FLOAT, GL_FALSE, 0, None)
+
+        perspective_matrix = perspective(45., 1., 0.1, 100.)
+        glUniformMatrix4fv(self.uniform_perspective, 1, GL_FALSE, perspective_matrix)
+
 
     def display(self):
         try:
